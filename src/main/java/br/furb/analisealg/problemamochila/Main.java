@@ -89,14 +89,13 @@ public class Main {
         int pesoMaximo = M[n][W];
         X = W;
         j = n;
-        for (j = n; j > 0 && pesoMaximo > 0; j--) {
-            if (pesoMaximo == M[j - 1][X]) {
-                continue;
-            } else {
+        while (j >= 1 && pesoMaximo > 0) {
+            if (pesoMaximo != M[j - 1][X]) {
                 itensUsados.add(new Item(w[j - 1], v[j - 1]));
                 pesoMaximo -= v[j - 1];
                 X = X - w[j - 1];
             }
+            j--;
         }
 
         solucao.setItems(itensUsados);
