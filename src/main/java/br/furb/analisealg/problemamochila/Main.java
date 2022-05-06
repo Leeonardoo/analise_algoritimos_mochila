@@ -3,6 +3,8 @@ package br.furb.analisealg.problemamochila;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.stream.Stream;
 
 public class Main {
 
@@ -84,7 +86,10 @@ public class Main {
 
     private static int getItemCount(File file) throws IOException {
         Path path = file.toPath();
-        return (int) Files.lines(path).count() - 1;
+        Stream<String> lines = Files.lines(path);
+        int lineCount  = (int) lines.count();
+        lines.close();
+        return lineCount;
     }
 
     private static Mochila lerMochila(int itemCount, File file) throws IOException {
@@ -104,6 +109,7 @@ public class Main {
         }
 
         mochila.setItems(items);
+        br.close();
         return mochila;
     }
 }

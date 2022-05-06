@@ -1,8 +1,8 @@
 package br.furb.analisealg.problemamochila;
 
 public class Mochila {
-    int W;
-    int[][] items;
+    private int W;
+    private int[][] items;
 
     public Mochila(int W, int[][] items) {
         this.W = W;
