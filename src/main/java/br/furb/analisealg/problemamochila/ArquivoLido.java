@@ -1,15 +1,15 @@
 package br.furb.analisealg.problemamochila;
 
-public class Mochila {
+public class ArquivoLido {
     private int W;
     private int[][] items;
 
-    public Mochila(int W, int[][] items) {
+    public ArquivoLido(int W, int[][] items) {
         this.W = W;
         this.items = items;
     }
 
-    public Mochila(int W) {
+    public ArquivoLido(int W) {
         this.W = W;
     }
 
