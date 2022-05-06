@@ -18,37 +18,14 @@ public class Main {
         }
 
         for (File file : inputFiles) {
-            Mochila result = lerMochila(file);
-            int n = result.getItems()[0].length;
+            int n = getItemCount(file);
+            Mochila result = lerMochila(n, file);
             int[] v = result.getItems()[1];
             int[] w = result.getItems()[0];
 
             System.out.println(mochilaRecursivo(n, v, w, result.getW()));
             System.out.println(mochilaDinamicaBottomUp(n, v, w, result.getW()));
         }
-    }
-
-    private static Mochila lerMochila(File file) throws Exception {
-        int[][] items;
-
-        Path path = file.toPath();
-        items = new int[2][(int) Files.lines(path).count() - 1];
-
-        BufferedReader br = new BufferedReader(new FileReader(file));
-        Mochila mochila = new Mochila(Integer.parseInt(br.readLine()));
-        int i = 0;
-
-        String line;
-        while ((line = br.readLine()) != null) {
-            String[] values = line.split(" ");
-
-            items[0][i] = Integer.parseInt(values[0]);
-            items[1][i] = Integer.parseInt(values[1]);
-            i++;
-        }
-
-        mochila.setItems(items);
-        return mochila;
     }
 
     /**
@@ -103,5 +80,30 @@ public class Main {
         }
 
         return M[n][W];
+    }
+
+    private static int getItemCount(File file) throws IOException {
+        Path path = file.toPath();
+        return (int) Files.lines(path).count() - 1;
+    }
+
+    private static Mochila lerMochila(int itemCount, File file) throws IOException {
+        int[][] items = new int[2][itemCount];
+
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        Mochila mochila = new Mochila(Integer.parseInt(br.readLine()));
+        int i = 0;
+
+        String line;
+        while ((line = br.readLine()) != null) {
+            String[] values = line.split(" ");
+
+            items[0][i] = Integer.parseInt(values[0]);
+            items[1][i] = Integer.parseInt(values[1]);
+            i++;
+        }
+
+        mochila.setItems(items);
+        return mochila;
     }
 }
