@@ -86,14 +86,12 @@ public class Main {
         ArrayList<Item> itensUsados = new ArrayList<>();
 
         //Montar a lista de cada item incluído
-        int pesoMaximo = M[n][W];
         X = W;
-        j = n;
-        while (j >= 1 && pesoMaximo > 0) {
-            if (pesoMaximo != M[j - 1][X]) {
+        j = n - 1;
+        while (j > 1) {
+            if (M[j][X] == M[j - 1][X - w[j - 1]] + v[j - 1]) {
                 itensUsados.add(new Item(w[j - 1], v[j - 1]));
-                pesoMaximo -= v[j - 1];
-                X = X - w[j - 1];
+                X -= w[j - 1];
             }
             j--;
         }
