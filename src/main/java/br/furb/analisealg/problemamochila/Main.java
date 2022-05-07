@@ -21,13 +21,16 @@ public class Main {
         }
 
         for (File file : inputFiles) {
+            System.out.println("Arquivo " + file.getName());
             int n = getItemCount(file);
             ArquivoLido arquivo = lerArquivo(n, file);
             int[] v = arquivo.getItems()[1];
             int[] w = arquivo.getItems()[0];
 
+            System.out.println("Recursivo: ");
             System.out.println(mochilaRecursivo(n, v, w, arquivo.getW()));
 
+            System.out.println("\nBottomUp: ");
             SolucaoMochila solucaoBottomUp = mochilaDinamicaBottomUp(n, v, w, arquivo.getW());
             System.out.println(solucaoBottomUp.getMaxWeight());
             System.out.println("Itens adicionados: ");
@@ -35,7 +38,7 @@ public class Main {
                     .stream()
                     .map(Item::toString)
                     .collect(Collectors.joining("\n"));
-            System.out.println(itensBottomUp);
+            System.out.println(itensBottomUp + "\n\n");
         }
     }
 
