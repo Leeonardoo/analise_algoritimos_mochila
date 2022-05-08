@@ -1,8 +1,14 @@
 package br.furb.analisealg.problemamochila;
 
+import com.bethecoder.ascii_table.ASCIITable;
+import com.bethecoder.ascii_table.ASCIITableHeader;
+import com.bethecoder.ascii_table.spec.IASCIITable;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -15,23 +21,38 @@ public class Main {
     public static void main(String[] args) throws Exception {
         inputDir.mkdirs();
         File[] inputFiles = inputDir.listFiles();
+        ArrayList<Benchmark> benchmarks = new ArrayList<>();
 
         if (inputFiles == null || inputFiles.length == 0) {
             throw new IllegalStateException("Nenhum arquivo foi encontrado na pasta input (localizada em: " + inputDir.getAbsolutePath() + ").");
         }
 
         for (File file : inputFiles) {
+            Benchmark benchmark = new Benchmark(file.getName());
+            benchmarks.add(benchmark);
             System.out.println("Arquivo " + file.getName());
+
+            //Inicializar arquivo
             int n = getItemCount(file);
             ArquivoLido arquivo = lerArquivo(n, file);
             int[] v = arquivo.getItems()[1];
             int[] w = arquivo.getItems()[0];
 
             System.out.println("Recursivo: ");
+            long l1Recursivo = System.nanoTime();
             System.out.println(mochilaRecursivo(n, v, w, arquivo.getW()));
+            long l2Recursivo = System.nanoTime();
+            benchmark.setRecursiveDuration(l1Recursivo, l2Recursivo);
+            //Resultado recursivo
+            //[...]
 
             System.out.println("\nBottomUp: ");
-            SolucaoMochila solucaoBottomUp = mochilaDinamicaBottomUp(n, v, w, arquivo.getW());
+            long l1BottomUp = System.nanoTime();
+            Result solucaoBottomUp = mochilaDinamicaBottomUp(n, v, w, arquivo.getW());
+            long l2BottomUp = System.nanoTime();
+            benchmark.setBottomUpDuration(l1BottomUp, l2BottomUp);
+
+            //Resultado bottomUp
             System.out.println(solucaoBottomUp.getMaxWeight());
             System.out.println("Itens adicionados: ");
             String itensBottomUp = solucaoBottomUp.getItems()
@@ -40,6 +61,10 @@ public class Main {
                     .collect(Collectors.joining("\n"));
             System.out.println(itensBottomUp + "\n\n");
         }
+
+        String[] header = new String[]{"", "Método recursivo", "Método Bottom-up"};
+        String[][] data = benchmarks.stream().map((item)-> new String[]{item.getFilename(), item.getRecursiveDuration(), item.getBottomUpDuration()}).toArray(String[][]::new);
+        ASCIITable.getInstance().printTable(header, IASCIITable.ALIGN_CENTER, data, IASCIITable.ALIGN_RIGHT);
     }
 
     /**
@@ -68,7 +93,7 @@ public class Main {
      * @param w Array de pesos
      * @param W Capacidade da bolsa
      */
-    private static SolucaoMochila mochilaDinamicaBottomUp(int n, int[] v, int[] w, int W) {
+    private static Result mochilaDinamicaBottomUp(int n, int[] v, int[] w, int W) {
         int[][] M = new int[n + 1][W + 1];
         int j, X;
 
@@ -85,7 +110,7 @@ public class Main {
             }
         }
 
-        SolucaoMochila solucao = new SolucaoMochila(M[n][W]);
+        Result solucao = new Result(M[n][W]);
         ArrayList<Item> itensUsados = new ArrayList<>();
 
         //Montar a lista de cada item incluído

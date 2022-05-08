@@ -2,11 +2,11 @@ package br.furb.analisealg.problemamochila;
 
 import java.util.ArrayList;
 
-public class SolucaoMochila {
+public class Result {
     private int maxWeight;
     private ArrayList<Item> items;
 
-    public SolucaoMochila(int maxWeight) {
+    public Result(int maxWeight) {
         this.maxWeight = maxWeight;
     }
 
