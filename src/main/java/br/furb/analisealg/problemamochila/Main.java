@@ -1,15 +1,16 @@
 package br.furb.analisealg.problemamochila;
 
 import com.bethecoder.ascii_table.ASCIITable;
-import com.bethecoder.ascii_table.ASCIITableHeader;
 import com.bethecoder.ascii_table.spec.IASCIITable;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
-import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,9 +40,17 @@ public class Main {
             int[] w = arquivo.getItems()[0];
 
             System.out.println("Recursivo: ");
+            ArrayList<Item> listaItensRecursivo = new ArrayList<>();
             long l1Recursivo = System.nanoTime();
-            System.out.println(mochilaRecursivo(n, v, w, arquivo.getW()));
+            System.out.println(mochilaRecursivo(n, v, w, arquivo.getW(), listaItensRecursivo));
             long l2Recursivo = System.nanoTime();
+            System.out.println("Itens adicionados: ");
+            String itensRecursivo = listaItensRecursivo
+                    .stream()
+                    .map(Item::toString)
+                    .collect(Collectors.joining("\n"));
+            System.out.println(itensRecursivo + "\n\n");
+
             benchmark.setRecursiveDuration(l1Recursivo, l2Recursivo);
             //Resultado recursivo
             //[...]
@@ -63,7 +72,7 @@ public class Main {
         }
 
         String[] header = new String[]{"", "Método recursivo", "Método Bottom-up"};
-        String[][] data = benchmarks.stream().map((item)-> new String[]{item.getFilename(), item.getRecursiveDuration(), item.getBottomUpDuration()}).toArray(String[][]::new);
+        String[][] data = benchmarks.stream().map((item) -> new String[]{item.getFilename(), item.getRecursiveDuration(), item.getBottomUpDuration()}).toArray(String[][]::new);
         ASCIITable.getInstance().printTable(header, IASCIITable.ALIGN_CENTER, data, IASCIITable.ALIGN_RIGHT);
     }
 
@@ -73,17 +82,28 @@ public class Main {
      * @param w Array de pesos
      * @param W Capacidade da bolsa
      */
-    private static int mochilaRecursivo(int n, int[] v, int[] w, int W) {
+    private static int mochilaRecursivo(int n, int[] v, int[] w, int W, List<Item> itensUsados) {
         if (n == 0 || W == 0)
             return 0;
 
         if (w[n - 1] > W) {
-            return mochilaRecursivo(n - 1, v, w, W);
+            List<Item> subOptimalChoice = new ArrayList<>();
+            int melhorCusto = mochilaRecursivo(n - 1, v, w, W, subOptimalChoice);
+            itensUsados.addAll(subOptimalChoice);
+            return melhorCusto;
         } else {
-            int usa = v[n - 1] + mochilaRecursivo(n - 1, v, w, W - w[n - 1]);
-            int naoUsa = mochilaRecursivo(n - 1, v, w, W);
-
-            return Math.max(usa, naoUsa);
+            List<Item> itensUsa = new ArrayList<>();
+            List<Item> itensNaoUsa = new ArrayList<>();
+            int usa = v[n - 1] + mochilaRecursivo(n - 1, v, w, W - w[n - 1], itensUsa);
+            int naoUsa = mochilaRecursivo(n - 1, v, w, W, itensNaoUsa);
+            if (usa > naoUsa) {
+                itensUsados.addAll(itensUsa);
+                itensUsados.add(new Item(w[n-1], v[n-1]));
+                return usa;
+            } else {
+                itensUsados.addAll(itensNaoUsa);
+                return naoUsa;
+            }
         }
     }
 
@@ -94,34 +114,34 @@ public class Main {
      * @param W Capacidade da bolsa
      */
     private static Result mochilaDinamicaBottomUp(int n, int[] v, int[] w, int W) {
-        int[][] M = new int[n + 1][W + 1];
-        int j, X;
+        int i, j;
+        int K[][] = new int[n + 1][W + 1];
 
-        //-1 no j pois acessa os outros arrays que tem uma linha e coluna a menos
-        for (j = 1; j <= n; j++) {
-            for (X = 0; X <= W; X++) {
-                if (w[j - 1] > X) {
-                    M[j - 1][X] = M[j - 1][X];
-                } else {
-                    int usa = v[j - 1] + M[j - 1][X - w[j - 1]]; //valor de uma posição qualquer da linha –1
-                    int naoUsa = M[j - 1][X]; //item da linha anterior
-                    M[j][X] = Math.max(usa, naoUsa);
-                }
+        for (i = 0; i <= n; i++) {
+            for (j = 0; j <= W; j++) {
+                if (i == 0 || j == 0)
+                    K[i][j] = 0;
+                else if (w[i - 1] <= j)
+                    K[i][j] = Math.max(v[i - 1] +
+                            K[i - 1][j - w[i - 1]], K[i - 1][j]);
+                else
+                    K[i][j] = K[i - 1][j];
             }
         }
 
-        Result solucao = new Result(M[n][W]);
+        Result solucao = new Result(K[n][W]);
         ArrayList<Item> itensUsados = new ArrayList<>();
+        int res = K[n][W];
 
-        //Montar a lista de cada item incluído
-        X = W;
-        j = n - 1;
-        while (j > 1) {
-            if (M[j][X] == M[j - 1][X - w[j - 1]] + v[j - 1]) {
-                itensUsados.add(new Item(w[j - 1], v[j - 1]));
-                X -= w[j - 1];
+        j = W;
+        for (i = n; i > 0 && res > 0; i--) {
+            if (res == K[i - 1][j])
+                continue;
+            else {
+                itensUsados.add(new Item(w[i - 1], v[i - 1]));
+                res = res - v[i - 1];
+                j = j - w[i - 1];
             }
-            j--;
         }
 
         solucao.setItems(itensUsados);
