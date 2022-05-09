@@ -49,11 +49,9 @@ public class Main {
                     .stream()
                     .map(Item::toString)
                     .collect(Collectors.joining("\n"));
-            System.out.println(itensRecursivo + "\n\n");
+            System.out.println(itensRecursivo + "\n");
 
             benchmark.setRecursiveDuration(l1Recursivo, l2Recursivo);
-            //Resultado recursivo
-            //[...]
 
             System.out.println("\nBottomUp: ");
             long l1BottomUp = System.nanoTime();
@@ -83,14 +81,15 @@ public class Main {
      * @param W Capacidade da bolsa
      */
     private static int mochilaRecursivo(int n, int[] v, int[] w, int W, List<Item> itensUsados) {
-        if (n == 0 || W == 0)
+        if (n == 0 || W == 0) {
             return 0;
+        }
 
         if (w[n - 1] > W) {
-            List<Item> subOptimalChoice = new ArrayList<>();
-            int melhorCusto = mochilaRecursivo(n - 1, v, w, W, subOptimalChoice);
-            itensUsados.addAll(subOptimalChoice);
-            return melhorCusto;
+            List<Item> escolhaInicial = new ArrayList<>();
+            int usa = mochilaRecursivo(n - 1, v, w, W, escolhaInicial);
+            itensUsados.addAll(escolhaInicial);
+            return usa;
         } else {
             List<Item> itensUsa = new ArrayList<>();
             List<Item> itensNaoUsa = new ArrayList<>();
@@ -98,7 +97,7 @@ public class Main {
             int naoUsa = mochilaRecursivo(n - 1, v, w, W, itensNaoUsa);
             if (usa > naoUsa) {
                 itensUsados.addAll(itensUsa);
-                itensUsados.add(new Item(w[n-1], v[n-1]));
+                itensUsados.add(new Item(w[n - 1], v[n - 1]));
                 return usa;
             } else {
                 itensUsados.addAll(itensNaoUsa);
@@ -114,33 +113,33 @@ public class Main {
      * @param W Capacidade da bolsa
      */
     private static Result mochilaDinamicaBottomUp(int n, int[] v, int[] w, int W) {
-        int i, j;
-        int K[][] = new int[n + 1][W + 1];
+        int j, X;
+        int[][] M = new int[n + 1][W + 1];
 
-        for (i = 0; i <= n; i++) {
-            for (j = 0; j <= W; j++) {
-                if (i == 0 || j == 0)
-                    K[i][j] = 0;
-                else if (w[i - 1] <= j)
-                    K[i][j] = Math.max(v[i - 1] +
-                            K[i - 1][j - w[i - 1]], K[i - 1][j]);
-                else
-                    K[i][j] = K[i - 1][j];
+        //-1 no j pois acessa os outros arrays que tem uma linha e coluna a menos
+        for (j = 1; j <= n; j++) {
+            for (X = 0; X <= W; X++) {
+                if (w[j - 1] > X) {
+                    M[j][X] = M[j - 1][X];
+                } else {
+                    int usa = v[j - 1] + M[j - 1][X - w[j - 1]];
+                    int naoUsa = M[j - 1][X];
+                    M[j][X] = Math.max(usa, naoUsa);
+                }
             }
         }
 
-        Result solucao = new Result(K[n][W]);
+        Result solucao = new Result(M[n][W]);
         ArrayList<Item> itensUsados = new ArrayList<>();
-        int res = K[n][W];
 
-        j = W;
-        for (i = n; i > 0 && res > 0; i--) {
-            if (res == K[i - 1][j])
-                continue;
-            else {
-                itensUsados.add(new Item(w[i - 1], v[i - 1]));
-                res = res - v[i - 1];
-                j = j - w[i - 1];
+        //Montar a lista de cada item incluído
+        int valorMaximo = M[n][W];
+        X = W;
+        for (j = n; j > 0 && valorMaximo > 0; j--) {
+            if (valorMaximo != M[j - 1][X]) {
+                itensUsados.add(new Item(w[j - 1], v[j - 1]));
+                valorMaximo -= v[j - 1];
+                X = X - w[j - 1];
             }
         }
 
